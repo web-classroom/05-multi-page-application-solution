@@ -56,6 +56,9 @@ app.post('/create', (req, res) => {
 // Returns a dicton by its id.
 app.get('/:id', (req, res) => {
     db.get("SELECT dicton FROM dictons WHERE id = ?", [req.params.id], function(err, row) {
+        if (!row) {
+            return res.status(404).send('Cette page n\'existe pas')
+        }
         res.send(row.dicton);
     });
 });
