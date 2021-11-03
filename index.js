@@ -11,6 +11,8 @@ let db = new sqlite3.Database('./dictons.sqlite', sqlite3.OPEN_READWRITE, (err) 
     console.log('Connected to the dictons database.');
 });
 
+app.set('view engine', 'ejs')
+
 // Decode url encoded form parameters (POST requests)
 app.use(express.urlencoded())
 
@@ -22,7 +24,7 @@ app.use(express.json())
 // Example: <q>random dicton</q>
 app.get('/', (req, res) => {
     db.get("SELECT dicton FROM dictons ORDER BY random() LIMIT 1", [], function(err, row) {
-        res.send(`<q>${row.dicton}</q>`);
+        res.render('dicton', { row })
     });
 });
 
@@ -31,8 +33,7 @@ app.get('/', (req, res) => {
 // Example: <ul><li><a href="/1">dicton 1</a></li></ul> 
 app.get('/list', (req, res) => {
     db.all("SELECT id, dicton FROM dictons ORDER BY id", [], function(err, rows) {
-        let list = rows.map(row => `<li><a href="/${row.id}">${row.dicton}</a>`).join('')
-        res.send(`<ul>${list}</ul>`);
+        res.render('list', { rows })
     });
 });
 
@@ -40,7 +41,7 @@ app.get('/list', (req, res) => {
 // Displays a HTML form for creating new dictons with POST requests.
 // Example: <form method=POST><input type='text' name='dicton'></input><button>Nouveau dicton</button></form>
 app.get('/create', (req, res) => {
-    res.send("<form method=POST><input type='text' name='dicton'></input><button>Nouveau dicton</button></form>")
+    res.render('create')
 });
 
 // POST /create
@@ -56,7 +57,10 @@ app.post('/create', (req, res) => {
 // Returns a dicton by its id.
 app.get('/:id', (req, res) => {
     db.get("SELECT dicton FROM dictons WHERE id = ?", [req.params.id], function(err, row) {
-        res.send(row.dicton);
+        if (!row) {
+            return res.status(404).send('Cette page n\'existe pas')
+        }
+        res.render('dicton', { row });
     });
 });
 
